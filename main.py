@@ -7,18 +7,11 @@ def ping_server(server):
 
 # Check the status of all services with "voxco" in the name
 def check_voxco_services():
-    cmd = 'sc query state= all | findstr /i "voxco SERVICE_NAME:"'
+    cmd = 'powershell "Get-Service *voxco* | Where-Object {$_.Status -eq \'Running\'} | Format-List -Property Name, Status"'
     process = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE)
-    services = process.communicate()[0].decode('utf-8').splitlines()
-    services = [s.split(':')[1].strip() for s in services]
+    output = process.communicate()[0].decode('utf-8').splitlines()
 
-    running_services = []
-    for service in services:
-        cmd = f'sc query "{service}" | find "RUNNING"'
-        process = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE)
-        output = process.communicate()[0]
-        if "RUNNING" in output.decode('utf-8'):
-            running_services.append(service)
+    running_services = [line.split(':')[1].strip() for line in output if 'Name' in line]
 
     return running_services
 
